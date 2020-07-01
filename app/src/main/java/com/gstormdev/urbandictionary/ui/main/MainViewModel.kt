@@ -16,6 +16,12 @@ import java.util.*
 import javax.inject.Inject
 
 class MainViewModel @Inject constructor(app: Application, private val restClient: UrbanDictionaryRestClient) : AndroidViewModel(app) {
+
+    private enum class SortOrder {
+        THUMBS_UP,
+        THUMBS_DOWN,
+        DEFAULT
+    }
     // Keep mutable LiveData private, we don't want this set outside of this class
     private val _definitions = MutableLiveData<Resource<List<Definition>>>(Resource.success(null))
     private val _searchTermError = MutableLiveData<String?>(null)
@@ -27,6 +33,7 @@ class MainViewModel @Inject constructor(app: Application, private val restClient
     val emptyText: LiveData<String?> = _emptyText
 
     private var searchTerm: String = ""
+    private var sortOrder = SortOrder.DEFAULT
 
     fun retrieveDefinitions(term: String?) {
         if (!term.isNullOrBlank()) {
@@ -46,6 +53,8 @@ class MainViewModel @Inject constructor(app: Application, private val restClient
     private fun fetchDefinitions(term: String) {
         // Set state to loading, but don't get rid of current definitions
         _definitions.postValue(Resource.loading(_definitions.value?.data))
+        // Reset sort order to default for the list coming in
+        sortOrder = SortOrder.DEFAULT
         restClient.getDefinition(term).enqueue(object : Callback<ListWrapper<Definition>> {
             override fun onResponse(
                 call: Call<ListWrapper<Definition>>,
@@ -70,5 +79,42 @@ class MainViewModel @Inject constructor(app: Application, private val restClient
                 _definitions.postValue(Resource.error(t.message ?: "unknown error", null))
             }
         })
+    }
+
+    fun applySort() {
+        applySort(_definitions.value?.data)
+    }
+
+    // Extremely simple sort that just toggles between two states
+    // Ideally, there should be some indication to the user about which sort is being applied
+    // However, I left this out for simplicity, and how subjective the UX could be
+    private fun applySort(definitions: List<Definition>?) {
+        if (definitions.isNullOrEmpty()) {
+            // If there is nothing to sort, exit early
+            return
+        }
+
+        computeNextSortOrder()
+
+        val sortedDefinitions = when (sortOrder) {
+            SortOrder.THUMBS_UP -> definitions.sortedByDescending { it.thumbs_up }
+            SortOrder.THUMBS_DOWN -> definitions.sortedByDescending { it.thumbs_down }
+            else -> null  // Don't apply a sort
+        }
+
+        sortedDefinitions?.let {
+            // Only post changes if we have a list to post
+            _definitions.postValue(Resource.success(it))
+        }
+    }
+
+    // We are assuming that the sort button simply toggles between THUMBS_UP and THUMBS_DOWN sorting
+    // Default sorting only exists when a new list is retrieved
+    private fun computeNextSortOrder() {
+        sortOrder = when (sortOrder) {
+            SortOrder.DEFAULT -> SortOrder.THUMBS_UP
+            SortOrder.THUMBS_UP -> SortOrder.THUMBS_DOWN
+            SortOrder.THUMBS_DOWN -> SortOrder.THUMBS_UP
+        }
     }
 }

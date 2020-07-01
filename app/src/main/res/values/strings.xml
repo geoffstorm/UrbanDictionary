@@ -4,6 +4,7 @@
     <string name="search">Search</string>
     <string name="empty_search">Search a word to see it\'s definitions!</string>
     <string name="empty_search_results">No definitions were found for %s</string>
+    <string name="sort">Sort</string>
 
     <!-- Content Descriptions -->
     <string name="cd_thumbs_up">Thumbs Up</string>
