@@ -9,7 +9,7 @@ An interview coding exercise.
 - Show a progress indication while the Urban Dictionary API call is being made
 - Write at least one unit test and one instrumented test
 	* Be prepared to talk about what other test cases you think would be beneficial to write
-- Document ass assumptions
+- Document all assumptions
 
 ## Optional Requirements
 
