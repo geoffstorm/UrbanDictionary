@@ -2,7 +2,6 @@ package com.gstormdev.urbandictionary.ui.main
 
 import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
-import android.util.Log
 import android.view.*
 import androidx.fragment.app.Fragment
 import android.view.inputmethod.EditorInfo
@@ -77,7 +76,6 @@ class MainFragment : Fragment() {
         }
 
         viewModel.definitions.observe(viewLifecycleOwner, Observer {
-            Log.e("MainFragment", "Resource status is ${it.status.name}")
             binding.progress.visibility = if (it.status == Status.LOADING) View.VISIBLE else View.GONE
 
             it.data?.let { list ->
