@@ -1,6 +1,6 @@
 package com.gstormdev.urbandictionary.di
 
-import android.content.Context
+import android.app.Application
 import com.gstormdev.urbandictionary.BuildConfig
 import com.gstormdev.urbandictionary.UrbanDictApp
 import com.gstormdev.urbandictionary.api.UrbanDictionaryRestClient
@@ -43,5 +43,5 @@ class AppModule {
     }
 
     @Provides
-    fun providesContext(app: UrbanDictApp): Context { return app }
+    fun providesApplication(app: UrbanDictApp): Application { return app }
 }

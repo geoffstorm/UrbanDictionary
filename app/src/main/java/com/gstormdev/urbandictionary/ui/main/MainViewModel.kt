@@ -1,9 +1,9 @@
 package com.gstormdev.urbandictionary.ui.main
 
-import android.content.Context
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import com.gstormdev.urbandictionary.R
 import com.gstormdev.urbandictionary.api.ListWrapper
 import com.gstormdev.urbandictionary.api.Resource
@@ -15,7 +15,7 @@ import retrofit2.Response
 import java.util.*
 import javax.inject.Inject
 
-class MainViewModel @Inject constructor(private val context: Context, private val restClient: UrbanDictionaryRestClient) : ViewModel() {
+class MainViewModel @Inject constructor(app: Application, private val restClient: UrbanDictionaryRestClient) : AndroidViewModel(app) {
     // Keep mutable LiveData private, we don't want this set outside of this class
     private var _definitions = MutableLiveData<Resource<List<Definition>>>(Resource.loading(null))
     private val _searchTermError = MutableLiveData<String?>(null)
@@ -35,7 +35,7 @@ class MainViewModel @Inject constructor(private val context: Context, private va
                 fetchDefinitions(searchTerm)
             }
         } else {
-            _searchTermError.postValue(context.getString(R.string.search_term_error))
+            _searchTermError.postValue(getApplication<Application>().getString(R.string.search_term_error))
         }
     }
 
