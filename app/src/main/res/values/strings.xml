@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">UrbanDictionary</string>
+    <string name="search_term_error">Search term cannot be empty</string>
 </resources>

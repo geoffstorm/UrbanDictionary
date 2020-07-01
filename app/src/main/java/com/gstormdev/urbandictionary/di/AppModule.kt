@@ -1,6 +1,8 @@
 package com.gstormdev.urbandictionary.di
 
+import android.content.Context
 import com.gstormdev.urbandictionary.BuildConfig
+import com.gstormdev.urbandictionary.UrbanDictApp
 import com.gstormdev.urbandictionary.api.UrbanDictionaryRestClient
 import dagger.Module
 import dagger.Provides
@@ -34,8 +36,12 @@ class AppModule {
     fun provideRestClient(httpClient: OkHttpClient): UrbanDictionaryRestClient {
         return Retrofit.Builder()
             .baseUrl("https://mashape-community-urban-dictionary.p.rapidapi.com/")
+            .client(httpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(UrbanDictionaryRestClient::class.java)
     }
+
+    @Provides
+    fun providesContext(app: UrbanDictApp): Context { return app }
 }

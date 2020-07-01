@@ -7,5 +7,5 @@ import retrofit2.http.Query
 
 interface UrbanDictionaryRestClient  {
     @GET("define")
-    fun getDefinition(@Query("term") term: String): Call<ListResponse<Definition>>
+    fun getDefinition(@Query("term") term: String): Call<ListWrapper<Definition>>
 }
