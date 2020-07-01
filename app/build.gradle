@@ -2,6 +2,12 @@ plugins {
     id 'com.android.application'
     id 'kotlin-android'
     id 'kotlin-kapt'
+    id 'kotlin-allopen'
+}
+
+allOpen {
+    // Allows mocking for classes without directly opening them for release builds
+    annotation 'com.gstormdev.urbandictionary.testing.OpenClass'
 }
 
 android {
@@ -15,7 +21,7 @@ android {
         versionCode 1
         versionName "1.0"
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "com.gstormdev.urbandictionary.util.UrbanDictTestRunner"
     }
 
     buildTypes {
@@ -59,6 +65,21 @@ dependencies {
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
     testImplementation 'junit:junit:4.13'
+    testImplementation 'androidx.arch.core:core-testing:2.1.0'
+    testImplementation 'com.squareup.okhttp3:mockwebserver:3.8.1'
+    testImplementation 'org.mockito:mockito-core:2.25.0'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+    androidTestImplementation 'androidx.arch.core:core-testing:2.1.0'
+    androidTestImplementation 'androidx.appcompat:appcompat:1.1.0'
+    androidTestImplementation 'org.mockito:mockito-core:2.25.0'
+    androidTestImplementation 'org.mockito:mockito-android:2.25.0'
+    debugImplementation 'androidx.fragment:fragment-testing:1.2.5'
+}
+
+// We need AllOpen to run tests which we enable only for debug builds
+project.tasks.whenTaskAdded {
+    if (it.name == "testReleaseUnitTest") {
+        it.enabled = false
+    }
 }

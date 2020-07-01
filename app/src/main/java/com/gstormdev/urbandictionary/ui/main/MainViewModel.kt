@@ -9,12 +9,14 @@ import com.gstormdev.urbandictionary.api.ListWrapper
 import com.gstormdev.urbandictionary.api.Resource
 import com.gstormdev.urbandictionary.api.UrbanDictionaryRestClient
 import com.gstormdev.urbandictionary.entity.Definition
+import com.gstormdev.urbandictionary.testing.OpenForTesting
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.util.*
 import javax.inject.Inject
 
+@OpenForTesting
 class MainViewModel @Inject constructor(app: Application, private val restClient: UrbanDictionaryRestClient) : AndroidViewModel(app) {
 
     private enum class SortOrder {
