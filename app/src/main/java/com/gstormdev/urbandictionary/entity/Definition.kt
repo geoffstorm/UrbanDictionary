@@ -11,5 +11,5 @@ data class Definition(
      * The definition can contain square brackets linking words to other definitions
      * This will remove those for simpler display
      */
-    fun getDisplayFormattedDefinition() = definition.replace("\\[|\\]", "")
+    fun getDisplayFormattedDefinition() = definition.replace(Regex("[\\[\\]]"), "")
 }

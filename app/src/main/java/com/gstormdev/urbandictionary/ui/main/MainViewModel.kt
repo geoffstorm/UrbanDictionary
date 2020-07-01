@@ -17,12 +17,14 @@ import javax.inject.Inject
 
 class MainViewModel @Inject constructor(app: Application, private val restClient: UrbanDictionaryRestClient) : AndroidViewModel(app) {
     // Keep mutable LiveData private, we don't want this set outside of this class
-    private var _definitions = MutableLiveData<Resource<List<Definition>>>(Resource.loading(null))
+    private val _definitions = MutableLiveData<Resource<List<Definition>>>(Resource.success(null))
     private val _searchTermError = MutableLiveData<String?>(null)
+    private val _emptyText = MutableLiveData<String?>(getApplication<Application>().getString(R.string.empty_search))
 
     // Expose an immutable LiveData for outside consumption
     var definitions: LiveData<Resource<List<Definition>>> = _definitions
     val searchTermError: LiveData<String?> = _searchTermError
+    val emptyText: LiveData<String?> = _emptyText
 
     private var searchTerm: String = ""
 
@@ -50,8 +52,13 @@ class MainViewModel @Inject constructor(app: Application, private val restClient
                 response: Response<ListWrapper<Definition>>
             ) {
                 if (response.isSuccessful) {
-                    val body = response.body()
-                    _definitions.postValue(Resource.success(body?.list))
+                    val body = response.body()?.list
+                    if (body.isNullOrEmpty()) {
+                        _emptyText.postValue(getApplication<Application>().getString(R.string.empty_search_results, searchTerm))
+                    } else {
+                        _emptyText.postValue(null)
+                    }
+                    _definitions.postValue(Resource.success(body))
                 } else {
                     val msg = response.errorBody()?.string()
                     val errorMsg = if (msg.isNullOrEmpty()) response.message() else msg

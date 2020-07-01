@@ -1,4 +1,11 @@
 <resources>
     <string name="app_name">UrbanDictionary</string>
     <string name="search_term_error">Search term cannot be empty</string>
+    <string name="search">Search</string>
+    <string name="empty_search">Search a word to see it\'s definitions!</string>
+    <string name="empty_search_results">No definitions were found for %s</string>
+
+    <!-- Content Descriptions -->
+    <string name="cd_thumbs_up">Thumbs Up</string>
+    <string name="cd_thumbs_down">Thumbs Down</string>
 </resources>
