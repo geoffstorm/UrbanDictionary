@@ -27,7 +27,7 @@ class MainViewModel @Inject constructor(app: Application, private val restClient
     // Keep mutable LiveData private, we don't want this set outside of this class
     private val _definitions = MutableLiveData<Resource<List<Definition>>>(Resource.success(null))
     private val _searchTermError = MutableLiveData<String?>(null)
-    private val _emptyText = MutableLiveData<String?>(getApplication<Application>().getString(R.string.empty_search))
+    private val _emptyText = MutableLiveData<String?>(app.getString(R.string.empty_search))
 
     // Expose an immutable LiveData for outside consumption
     var definitions: LiveData<Resource<List<Definition>>> = _definitions
@@ -118,5 +118,11 @@ class MainViewModel @Inject constructor(app: Application, private val restClient
             SortOrder.THUMBS_UP -> SortOrder.THUMBS_DOWN
             SortOrder.THUMBS_DOWN -> SortOrder.THUMBS_UP
         }
+    }
+
+    fun resetSearchError() {
+        // This resets the error after it is displayed so that it doesn't get shown a second time
+        // after a device rotation or other configuration change
+        _searchTermError.postValue(null)
     }
 }

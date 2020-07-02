@@ -93,7 +93,16 @@ class MainFragment : Fragment() {
         })
 
         viewModel.searchTermError.observe(viewLifecycleOwner, Observer {
-            it?.let { Snackbar.make(binding.root, it, Snackbar.LENGTH_SHORT).show() }
+            it?.let {
+                val snackbar = Snackbar.make(binding.root, it, Snackbar.LENGTH_SHORT)
+                snackbar.addCallback(object : Snackbar.Callback() {
+                    override fun onShown(sb: Snackbar?) {
+                        super.onShown(sb)
+                        viewModel.resetSearchError()
+                    }
+                })
+                snackbar.show()
+            }
         })
 
         viewModel.emptyText.observe(viewLifecycleOwner, Observer {
