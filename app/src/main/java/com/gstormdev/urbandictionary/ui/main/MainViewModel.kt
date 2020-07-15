@@ -19,7 +19,7 @@ import javax.inject.Inject
 @OpenForTesting
 class MainViewModel @Inject constructor(app: Application, private val restClient: UrbanDictionaryRestClient) : AndroidViewModel(app) {
 
-    private enum class SortOrder {
+    enum class SortOrder {
         THUMBS_UP,
         THUMBS_DOWN,
         DEFAULT
@@ -83,20 +83,19 @@ class MainViewModel @Inject constructor(app: Application, private val restClient
         })
     }
 
-    fun applySort() {
-        applySort(_definitions.value?.data)
-    }
+    fun applySort(sortOrder: SortOrder) {
+        if (this.sortOrder == sortOrder) {
+            // If the sorting is already set, exit early
+            return
+        }
 
-    // Extremely simple sort that just toggles between two states
-    // Ideally, there should be some indication to the user about which sort is being applied
-    // However, I left this out for simplicity, and how subjective the UX could be
-    private fun applySort(definitions: List<Definition>?) {
+        this.sortOrder = sortOrder
+        val definitions = _definitions.value?.data
+
         if (definitions.isNullOrEmpty()) {
             // If there is nothing to sort, exit early
             return
         }
-
-        computeNextSortOrder()
 
         val sortedDefinitions = when (sortOrder) {
             SortOrder.THUMBS_UP -> definitions.sortedByDescending { it.thumbs_up }
@@ -107,16 +106,6 @@ class MainViewModel @Inject constructor(app: Application, private val restClient
         sortedDefinitions?.let {
             // Only post changes if we have a list to post
             _definitions.postValue(Resource.success(it))
-        }
-    }
-
-    // We are assuming that the sort button simply toggles between THUMBS_UP and THUMBS_DOWN sorting
-    // Default sorting only exists when a new list is retrieved
-    private fun computeNextSortOrder() {
-        sortOrder = when (sortOrder) {
-            SortOrder.DEFAULT -> SortOrder.THUMBS_UP
-            SortOrder.THUMBS_UP -> SortOrder.THUMBS_DOWN
-            SortOrder.THUMBS_DOWN -> SortOrder.THUMBS_UP
         }
     }
 

@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.*
 import androidx.fragment.app.Fragment
 import android.view.inputmethod.EditorInfo
+import android.widget.PopupMenu
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
@@ -13,6 +14,7 @@ import com.gstormdev.urbandictionary.api.Status
 import com.gstormdev.urbandictionary.databinding.MainFragmentBinding
 import com.gstormdev.urbandictionary.di.Injectable
 import com.gstormdev.urbandictionary.ui.RecyclerViewSpacing
+import com.gstormdev.urbandictionary.ui.main.MainViewModel.SortOrder
 import com.gstormdev.urbandictionary.util.hideKeyboard
 import javax.inject.Inject
 
@@ -46,7 +48,7 @@ class MainFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.menu_sort -> {
-                viewModel.applySort()
+                showSortingPopUpMenu()
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -118,5 +120,24 @@ class MainFragment : Fragment() {
     private fun handleSearch(view: View) {
         view.hideKeyboard()
         viewModel.retrieveDefinitions(binding.edSearch.text.toString())
+    }
+
+    private fun showSortingPopUpMenu() {
+        activity?.findViewById<View>(R.id.menu_sort)?.let { view ->
+            PopupMenu(requireContext(), view).run {
+                menuInflater.inflate(R.menu.sort_definitions, menu)
+                setOnMenuItemClickListener {
+                    viewModel.applySort(
+                            when (it.itemId) {
+                                R.id.sort_thumbs_up -> SortOrder.THUMBS_UP
+                                R.id.sort_thumbs_down -> SortOrder.THUMBS_DOWN
+                                else -> SortOrder.DEFAULT
+                            }
+                    )
+                    true
+                }
+                show()
+            }
+        }
     }
 }

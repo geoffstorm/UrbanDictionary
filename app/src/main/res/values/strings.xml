@@ -5,6 +5,8 @@
     <string name="empty_search">Search a word to see its definitions!</string>
     <string name="empty_search_results">No definitions were found for %s</string>
     <string name="sort">Sort</string>
+    <string name="sort_thumbs_up">Most Thumbs Up</string>
+    <string name="sort_thumbs_down">Most Thumbs Down</string>
 
     <!-- Content Descriptions -->
     <string name="cd_thumbs_up">Thumbs Up</string>
