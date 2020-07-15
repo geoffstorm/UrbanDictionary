@@ -1,36 +1,32 @@
 package com.gstormdev.urbandictionary.ui.main
 
 import android.app.Application
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.*
 import com.gstormdev.urbandictionary.R
-import com.gstormdev.urbandictionary.api.ListWrapper
 import com.gstormdev.urbandictionary.api.Resource
-import com.gstormdev.urbandictionary.api.UrbanDictionaryRestClient
+import com.gstormdev.urbandictionary.data.DefinitionRepository
 import com.gstormdev.urbandictionary.entity.Definition
 import com.gstormdev.urbandictionary.testing.OpenForTesting
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
 
 @OpenForTesting
-class MainViewModel @Inject constructor(app: Application, private val restClient: UrbanDictionaryRestClient) : AndroidViewModel(app) {
+class MainViewModel @Inject constructor(private val app: Application, private val repository: DefinitionRepository) : ViewModel() {
 
     enum class SortOrder {
         THUMBS_UP,
         THUMBS_DOWN,
         DEFAULT
     }
+
     // Keep mutable LiveData private, we don't want this set outside of this class
     private val _definitions = MutableLiveData<Resource<List<Definition>>>(Resource.success(null))
     private val _searchTermError = MutableLiveData<String?>(null)
     private val _emptyText = MutableLiveData<String?>(app.getString(R.string.empty_search))
 
     // Expose an immutable LiveData for outside consumption
-    var definitions: LiveData<Resource<List<Definition>>> = _definitions
+    val definitions: LiveData<Resource<List<Definition>>> = _definitions
     val searchTermError: LiveData<String?> = _searchTermError
     val emptyText: LiveData<String?> = _emptyText
 
@@ -41,46 +37,29 @@ class MainViewModel @Inject constructor(app: Application, private val restClient
         if (!term.isNullOrBlank()) {
             _searchTermError.postValue(null)
             val sanitizedTerm = term.toLowerCase(Locale.getDefault()).trim()
-            if (sanitizedTerm != searchTerm) {
-                searchTerm = sanitizedTerm
-                fetchDefinitions(searchTerm)
-            }
+            searchTerm = sanitizedTerm
+            fetchDefinitions(searchTerm)
         } else {
-            _searchTermError.postValue(getApplication<Application>().getString(R.string.search_term_error))
+            _searchTermError.postValue(app.getString(R.string.search_term_error))
         }
     }
 
-    // This should be done in a separate class, following the Single Responsibility Principle
-    // Shortcut taken due to time constraints
     private fun fetchDefinitions(term: String) {
         // Set state to loading, but don't get rid of current definitions
         _definitions.postValue(Resource.loading(_definitions.value?.data))
         // Reset sort order to default for the list coming in
         sortOrder = SortOrder.DEFAULT
-        restClient.getDefinition(term).enqueue(object : Callback<ListWrapper<Definition>> {
-            override fun onResponse(
-                call: Call<ListWrapper<Definition>>,
-                response: Response<ListWrapper<Definition>>
-            ) {
-                if (response.isSuccessful) {
-                    val body = response.body()?.list
-                    if (body.isNullOrEmpty()) {
-                        _emptyText.postValue(getApplication<Application>().getString(R.string.empty_search_results, searchTerm))
-                    } else {
-                        _emptyText.postValue(null)
-                    }
-                    _definitions.postValue(Resource.success(body))
-                } else {
-                    val msg = response.errorBody()?.string()
-                    val errorMsg = if (msg.isNullOrEmpty()) response.message() else msg
-                    _definitions.postValue(Resource.error(errorMsg ?: "unknown error", null))
-                }
+        viewModelScope.launch {
+            val definitions = repository.getDefinitions(term)
+            if (definitions.data.isNullOrEmpty()) {
+                // TODO need to find a way to properly get the search term into the Fragment so that
+                // we don't have to compose the String here, and then we can get rid of the Application reference
+                _emptyText.postValue(app.getString(R.string.empty_search_results, searchTerm))
+            } else {
+                _emptyText.postValue(null)
             }
-
-            override fun onFailure(call: Call<ListWrapper<Definition>>, t: Throwable) {
-                _definitions.postValue(Resource.error(t.message ?: "unknown error", null))
-            }
-        })
+            _definitions.postValue(definitions)
+        }
     }
 
     fun applySort(sortOrder: SortOrder) {
