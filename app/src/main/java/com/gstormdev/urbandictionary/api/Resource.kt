@@ -1,9 +1,6 @@
 package com.gstormdev.urbandictionary.api
 
-data class Resource<T>(val status: Status, val data: T?, val message: String?) {
-    companion object {
-        fun <T> success(data: T?) = Resource(Status.SUCCESS, data, null)
-        fun <T> error(msg: String, data: T?) = Resource(Status.ERROR, data, msg)
-        fun <T> loading(data: T?) = Resource(Status.LOADING, data, null)
-    }
-}
+sealed class Resource<T>
+data class Success<T>(val data: T) : Resource<T>()
+data class Error<T>(val msg: String) : Resource<T>()
+class Loading<T> : Resource<T>()

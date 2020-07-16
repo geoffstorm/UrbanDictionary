@@ -9,8 +9,11 @@ import android.widget.PopupMenu
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
+import com.gstormdev.urbandictionary.EventObserver
 import com.gstormdev.urbandictionary.R
-import com.gstormdev.urbandictionary.api.Status
+import com.gstormdev.urbandictionary.api.Error
+import com.gstormdev.urbandictionary.api.Loading
+import com.gstormdev.urbandictionary.api.Success
 import com.gstormdev.urbandictionary.databinding.MainFragmentBinding
 import com.gstormdev.urbandictionary.di.Injectable
 import com.gstormdev.urbandictionary.ui.RecyclerViewSpacing
@@ -78,32 +81,24 @@ class MainFragment : Fragment() {
         }
 
         viewModel.definitions.observe(viewLifecycleOwner, Observer {
-            binding.progress.visibility = if (it.status == Status.LOADING) View.VISIBLE else View.GONE
-
-            it.data?.let { list ->
-                definitionAdapter.setData(list)
-            }
-
-            it.message?.let { msg ->
-                // This is mostly for demonstration purposes.
-                // The message is non-null when an API error occurs, and the message
-                // is generally not user-friendly.
-                // If the desire is to let users know when an error has occurred, this
-                // needs to be reevaluated
-                Snackbar.make(binding.root, msg, Snackbar.LENGTH_SHORT).show()
+            when (it) {
+                is Success -> {
+                    definitionAdapter.setData(it.data)
+                    binding.progress.visibility = View.GONE
+                }
+                is Loading -> {
+                    binding.progress.visibility = View.VISIBLE
+                }
+                is Error -> {
+                    binding.progress.visibility = View.GONE
+                    Snackbar.make(binding.root, it.msg, Snackbar.LENGTH_SHORT).show()
+                }
             }
         })
 
-        viewModel.searchTermError.observe(viewLifecycleOwner, Observer {
+        viewModel.searchTermError.observe(viewLifecycleOwner, EventObserver {
             it?.let {
-                val snackbar = Snackbar.make(binding.root, it, Snackbar.LENGTH_SHORT)
-                snackbar.addCallback(object : Snackbar.Callback() {
-                    override fun onShown(sb: Snackbar?) {
-                        super.onShown(sb)
-                        viewModel.resetSearchError()
-                    }
-                })
-                snackbar.show()
+                Snackbar.make(binding.root, it, Snackbar.LENGTH_SHORT).show()
             }
         })
 

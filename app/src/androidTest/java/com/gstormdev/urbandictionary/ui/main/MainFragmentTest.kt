@@ -6,7 +6,9 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.gstormdev.urbandictionary.Event
 import com.gstormdev.urbandictionary.R
+import com.gstormdev.urbandictionary.api.Loading
 import com.gstormdev.urbandictionary.api.Resource
 import com.gstormdev.urbandictionary.entity.Definition
 import com.gstormdev.urbandictionary.util.TaskExecutorWithIdlingResourceRule
@@ -27,7 +29,7 @@ class MainFragmentTest {
 
     private lateinit var viewModel: MainViewModel
     private val definitions = MutableLiveData<Resource<List<Definition>>>()
-    private val searchTermError = MutableLiveData<String?>()
+    private val searchTermError = MutableLiveData<Event<String?>>()
     private val emptyText = MutableLiveData<String?>()
 
     @Before
@@ -46,7 +48,7 @@ class MainFragmentTest {
     @Test
     fun testProgressIsDisplayedWhenSearching() {
         onView(withId(R.id.progress)).check(matches(not(isDisplayed())))
-        definitions.postValue(Resource.loading(null))
+        definitions.postValue(Loading())
         onView(withId(R.id.progress)).check(matches(isDisplayed()))
     }
 
@@ -62,7 +64,7 @@ class MainFragmentTest {
 
     @Test
     fun testSearchTermError() {
-        searchTermError.postValue("test")
+        searchTermError.postValue(Event("test"))
         onView(withText("test")).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
     }
 

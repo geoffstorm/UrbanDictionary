@@ -2,8 +2,11 @@ package com.gstormdev.urbandictionary.ui.main
 
 import android.app.Application
 import androidx.lifecycle.*
+import com.gstormdev.urbandictionary.Event
 import com.gstormdev.urbandictionary.R
+import com.gstormdev.urbandictionary.api.Loading
 import com.gstormdev.urbandictionary.api.Resource
+import com.gstormdev.urbandictionary.api.Success
 import com.gstormdev.urbandictionary.data.DefinitionRepository
 import com.gstormdev.urbandictionary.entity.Definition
 import com.gstormdev.urbandictionary.testing.OpenForTesting
@@ -21,13 +24,13 @@ class MainViewModel @Inject constructor(private val app: Application, private va
     }
 
     // Keep mutable LiveData private, we don't want this set outside of this class
-    private val _definitions = MutableLiveData<Resource<List<Definition>>>(Resource.success(null))
-    private val _searchTermError = MutableLiveData<String?>(null)
+    private val _definitions = MutableLiveData<Resource<List<Definition>>>(Success(emptyList()))
+    private val _searchTermError = MutableLiveData<Event<String?>>(null)
     private val _emptyText = MutableLiveData<String?>(app.getString(R.string.empty_search))
 
     // Expose an immutable LiveData for outside consumption
     val definitions: LiveData<Resource<List<Definition>>> = _definitions
-    val searchTermError: LiveData<String?> = _searchTermError
+    val searchTermError: LiveData<Event<String?>> = _searchTermError
     val emptyText: LiveData<String?> = _emptyText
 
     private var searchTerm: String = ""
@@ -40,18 +43,18 @@ class MainViewModel @Inject constructor(private val app: Application, private va
             searchTerm = sanitizedTerm
             fetchDefinitions(searchTerm)
         } else {
-            _searchTermError.postValue(app.getString(R.string.search_term_error))
+            _searchTermError.postValue(Event(app.getString(R.string.search_term_error)))
         }
     }
 
     private fun fetchDefinitions(term: String) {
         // Set state to loading, but don't get rid of current definitions
-        _definitions.postValue(Resource.loading(_definitions.value?.data))
+        _definitions.postValue(Loading())
         // Reset sort order to default for the list coming in
         sortOrder = SortOrder.DEFAULT
         viewModelScope.launch {
             val definitions = repository.getDefinitions(term)
-            if (definitions.data.isNullOrEmpty()) {
+            if (definitions is Success && definitions.data.isEmpty()) {
                 // TODO need to find a way to properly get the search term into the Fragment so that
                 // we don't have to compose the String here, and then we can get rid of the Application reference
                 _emptyText.postValue(app.getString(R.string.empty_search_results, searchTerm))
@@ -69,7 +72,7 @@ class MainViewModel @Inject constructor(private val app: Application, private va
         }
 
         this.sortOrder = sortOrder
-        val definitions = _definitions.value?.data
+        val definitions = (_definitions.value as? Success)?.data ?: emptyList()
 
         if (definitions.isNullOrEmpty()) {
             // If there is nothing to sort, exit early
@@ -84,13 +87,7 @@ class MainViewModel @Inject constructor(private val app: Application, private va
 
         sortedDefinitions?.let {
             // Only post changes if we have a list to post
-            _definitions.postValue(Resource.success(it))
+            _definitions.postValue(Success(it))
         }
-    }
-
-    fun resetSearchError() {
-        // This resets the error after it is displayed so that it doesn't get shown a second time
-        // after a device rotation or other configuration change
-        _searchTermError.postValue(null)
     }
 }

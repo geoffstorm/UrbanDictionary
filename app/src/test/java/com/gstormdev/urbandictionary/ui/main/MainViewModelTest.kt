@@ -5,6 +5,7 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.Observer
 import com.gstormdev.urbandictionary.MainCoroutineRule
 import com.gstormdev.urbandictionary.api.Resource
+import com.gstormdev.urbandictionary.api.Success
 import com.gstormdev.urbandictionary.data.DefinitionRepository
 import com.gstormdev.urbandictionary.entity.Definition
 import com.gstormdev.urbandictionary.mock
@@ -60,7 +61,7 @@ class MainViewModelTest {
         val result = mock<Observer<Resource<List<Definition>>>>()
         viewModel.definitions.observeForever(result)
 
-        `when`(repo.getDefinitions("test")).thenReturn(Resource.success(emptyList()))
+        `when`(repo.getDefinitions("test")).thenReturn(Success(emptyList()))
 
         viewModel.retrieveDefinitions("test")
         verify(repo).getDefinitions("test")
