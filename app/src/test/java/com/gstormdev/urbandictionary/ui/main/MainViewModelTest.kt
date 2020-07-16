@@ -3,60 +3,67 @@ package com.gstormdev.urbandictionary.ui.main
 import android.app.Application
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.Observer
-import com.gstormdev.urbandictionary.api.ListWrapper
+import com.gstormdev.urbandictionary.MainCoroutineRule
 import com.gstormdev.urbandictionary.api.Resource
-import com.gstormdev.urbandictionary.api.UrbanDictionaryRestClient
+import com.gstormdev.urbandictionary.data.DefinitionRepository
 import com.gstormdev.urbandictionary.entity.Definition
 import com.gstormdev.urbandictionary.mock
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runBlockingTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.mockito.Mockito.*
-import retrofit2.Call
 
+@ExperimentalCoroutinesApi
 @RunWith(JUnit4::class)
 class MainViewModelTest {
 
     @Rule
     @JvmField
     val instantExecutor = InstantTaskExecutorRule()
-    private val restClient = mock(UrbanDictionaryRestClient::class.java)
+
+    @Rule
+    @JvmField
+    val mainCoroutineRule = MainCoroutineRule()
+
+    private val repo = mock(DefinitionRepository::class.java)
     private val app = mock(Application::class.java)
     private lateinit var viewModel: MainViewModel
 
     @Before
     fun init() {
         // need to init after instant executor rule is established
-        viewModel = MainViewModel(app, restClient)
+        viewModel = MainViewModel(app, repo)
     }
 
     @Test
-    fun testNullSearchDoesNotTriggerApi() {
+    fun testNullSearchDoesNotTriggerApi() = runBlockingTest {
         val result = mock<Observer<Resource<List<Definition>>>>()
         viewModel.definitions.observeForever(result)
         viewModel.retrieveDefinitions(null)
-        verify(restClient, never()).getDefinition("")
+        verify(repo, never()).getDefinitions("")
     }
 
     @Test
-    fun testEmptySearchDoesNotTriggerApi() {
+    fun testEmptySearchDoesNotTriggerApi() = runBlockingTest {
         val result = mock<Observer<Resource<List<Definition>>>>()
         viewModel.definitions.observeForever(result)
         viewModel.retrieveDefinitions("")
-        verify(restClient, never()).getDefinition("")
+        verify(repo, never()).getDefinitions("")
     }
 
     @Test
-    fun testSearchResultGoesToApi() {
+    fun testSearchResultGoesToApi() = runBlockingTest {
         val result = mock<Observer<Resource<List<Definition>>>>()
         viewModel.definitions.observeForever(result)
 
-        `when`(restClient.getDefinition("test")).thenReturn(mock<Call<ListWrapper<Definition>>>())
+        `when`(repo.getDefinitions("test")).thenReturn(Resource.success(emptyList()))
 
         viewModel.retrieveDefinitions("test")
-        verify(restClient).getDefinition("test")
+        verify(repo).getDefinitions("test")
     }
 
     /*
